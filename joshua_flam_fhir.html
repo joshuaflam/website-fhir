@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joshua Flam — Bundle/joshua-flam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-outer:#0B0E0F;
+    --bg-human:#33454E;
+    --bg-human-card:#3F535D;
+    --bg-fhir:#12191B;
+    --bg-fhir-card:#182123;
+    --accent:#E8A23D;
+    --accent-soft:rgba(232,162,61,0.14);
+    --teal:#5FA8A0;
+    --teal-soft:rgba(95,168,160,0.14);
+    --text-primary:#E8ECEC;
+    --text-muted:#A8B8BB;
+    --text-muted-cool:#7E9491;
+    --border-warm:#56717A;
+    --border-cool:#233032;
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'IBM Plex Sans',sans-serif;
+    --serif:'Fraunces',serif;
+  }
+  *{box-sizing:border-box;}
+  html{height:100%;}
+  body{
+    margin:0;padding:0;height:100vh;height:100dvh;
+    display:flex;flex-direction:column;overflow:hidden;
+    background:var(--bg-outer);color:var(--text-primary);font-family:var(--sans);
+  }
+  ::selection{background:var(--accent-soft);}
+
+  /* Console bar */
+  .console{
+    display:flex;align-items:center;gap:14px;
+    background:#0B0E0F;
+    border-bottom:1px solid #26211C;
+    padding:14px 22px;
+    font-family:var(--mono);
+    flex-wrap:wrap;
+    flex-shrink:0;
+  }
+  .console .method{
+    background:var(--teal-soft);color:var(--teal);
+    font-weight:600;font-size:12px;letter-spacing:0.06em;
+    padding:4px 8px;border-radius:4px;
+  }
+  .console .url{color:var(--text-primary);font-size:13px;opacity:0.9;flex:1;min-width:220px;}
+  .console .url .q{color:var(--accent);}
+  .console .status{
+    background:var(--accent-soft);color:var(--accent);
+    font-size:12px;font-weight:600;padding:4px 10px;border-radius:4px;
+    white-space:nowrap;
+  }
+  .tagline{
+    font-family:var(--mono);font-size:12px;color:var(--text-muted);
+    padding:8px 22px 0 22px;letter-spacing:0.01em;
+    flex-shrink:0;
+  }
+
+  /* Mobile tabs */
+  .mobile-tabs{display:none;padding:14px 22px 0 22px;gap:8px;flex-shrink:0;}
+  .mobile-tabs button{
+    font-family:var(--sans);font-size:13px;font-weight:600;
+    background:none;border:1px solid var(--border-warm);color:var(--text-muted);
+    padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;
+  }
+  .mobile-tabs button.active{color:var(--text-primary);border-color:var(--accent);background:var(--bg-human-card);}
+
+  /* Layout */
+  .split{
+    display:grid;grid-template-columns:1fr 1fr;
+    flex:1 1 auto;min-height:0;
+  }
+  .pane{padding:28px 30px 60px 30px;overflow-y:auto;height:100%;}
+  .pane-human{background:var(--bg-human);border-right:1px solid #0B0E0F;}
+  .pane-fhir{background:var(--bg-fhir);}
+
+  .pane-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.12em;
+    text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:8px;
+  }
+  .pane-human .pane-label{color:var(--accent);}
+  .pane-fhir .pane-label{color:var(--teal);}
+  .pane-label::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;}
+
+  /* Human view */
+  .name{font-family:var(--serif);font-weight:600;font-size:40px;line-height:1.05;margin:0 0 4px 0;letter-spacing:-0.01em;}
+  .role-line{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--text-muted);font-size:17px;margin:0 0 18px 0;}
+  .contact{font-size:13px;color:var(--text-muted);margin-bottom:8px;line-height:1.7;}
+  .contact a{color:var(--text-muted);}
+  .avail{
+    font-size:12.5px;color:var(--accent);background:var(--accent-soft);
+    display:inline-block;padding:5px 10px;border-radius:5px;margin-bottom:28px;font-family:var(--mono);
+  }
+
+  .section-title{
+    font-family:var(--serif);font-size:14px;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--text-muted);margin:34px 0 14px 0;padding-bottom:8px;border-bottom:1px solid var(--border-warm);
+  }
+
+  .section-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+  .nav-btn{
+    font-family:var(--mono);font-size:11.5px;color:var(--text-muted);
+    background:var(--bg-human-card);border:1px solid var(--border-warm);
+    padding:7px 14px;border-radius:20px;cursor:pointer;transition:all .15s ease;
+    user-select:none;
+  }
+  .nav-btn:hover{border-color:var(--accent);color:var(--text-primary);}
+  .nav-btn.current{background:var(--accent);color:#221A0C;border-color:var(--accent);font-weight:600;}
+
+  .card{
+    background:var(--bg-human-card);border:1px solid var(--border-warm);border-left:3px solid var(--border-warm);
+    border-radius:8px;padding:18px 20px;margin-bottom:14px;
+    transition:border-color .18s ease, transform .18s ease, opacity .2s ease;
+  }
+  .card.linked, .card.active{border-left-color:var(--accent);transform:translateX(2px);}
+  .card.dimmed{opacity:0.25;}
+  .card-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:2px;}
+  .card-title{font-family:var(--serif);font-weight:600;font-size:16.5px;}
+  .card-org{font-size:13px;color:var(--text-muted);font-style:italic;font-family:var(--serif);}
+  .card-dates{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);white-space:nowrap;}
+  .card ul{margin:10px 0 8px 0;padding-left:18px;}
+  .card li{font-size:13.5px;line-height:1.55;margin-bottom:5px;color:#D2DCDD;}
+  .card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .card-tags span{font-family:var(--mono);font-size:10.5px;color:var(--teal);background:var(--teal-soft);padding:2px 7px;border-radius:10px;}
+
+  .edu-item{margin-bottom:14px;}
+  .edu-item .deg{font-family:var(--serif);font-weight:600;font-size:14.5px;}
+  .edu-item .school{font-size:13px;color:var(--text-muted);}
+
+  .skill-row{margin-bottom:10px;font-size:13px;line-height:1.6;}
+  .skill-row .cat{font-family:var(--serif);font-weight:600;color:var(--text-primary);}
+  .skill-row .list{color:#BFCBCD;}
+
+  .section-subtitle{
+    font-family:var(--mono);text-transform:none;letter-spacing:0;font-size:11px;color:var(--text-muted);
+  }
+  .condition-row{
+    background:var(--bg-human-card);border:1px solid var(--border-warm);border-radius:8px;
+    padding:12px 16px;margin-bottom:10px;
+  }
+  .condition-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .condition-name{font-family:var(--serif);font-weight:600;font-size:14.5px;}
+  .condition-code{font-family:var(--mono);font-size:11px;color:var(--teal);background:var(--teal-soft);padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .condition-display{font-size:12.5px;color:#BFCBCD;margin-top:4px;}
+  .condition-note{font-size:12px;color:var(--text-muted);font-style:italic;margin-top:4px;}
+  .condition-status{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em;margin-top:6px;display:inline-block;}
+  .condition-status.resolved{color:var(--text-muted);}
+  .condition-status.active{color:var(--accent);}
+
+  /* FHIR view */
+  pre.fhir-block{
+    font-family:var(--mono);font-size:12.3px;line-height:1.65;
+    background:var(--bg-fhir-card);border:1px solid var(--border-cool);border-left:3px solid var(--border-cool);
+    border-radius:6px;padding:14px 16px;margin:0 0 12px 0;overflow-x:auto;white-space:pre;
+    transition:border-color .18s ease, opacity .2s ease;
+  }
+  pre.fhir-block.linked, pre.fhir-block.active{border-left-color:var(--teal);background:#1A2426;}
+  pre.fhir-block.dimmed{opacity:0.25;}
+  .fhir-bundle-head{
+    font-family:var(--mono);font-size:12.3px;color:var(--text-muted-cool);margin-bottom:16px;line-height:1.7;
+  }
+  .fhir-bundle-head b{color:var(--text-primary);}
+  .fhir-divider{
+    font-family:var(--mono);font-size:11px;color:var(--text-muted-cool);
+    margin:20px 0 10px 0;opacity:0.75;
+  }
+
+  .k{color:#8FBBD9;} .s{color:#C9D08A;} .n{color:var(--accent);} .b{color:#D98F8F;}
+
+  footer{
+    font-family:var(--mono);font-size:11.5px;color:var(--text-muted);
+    text-align:center;padding:20px;border-top:1px solid #1A1512;background:var(--bg-outer);
+    flex-shrink:0;
+  }
+  footer a{color:var(--teal);text-decoration:none;}
+
+  @media (max-width: 860px){
+    .split{grid-template-columns:1fr;}
+    .pane{display:none;}
+    .pane.mobile-active{display:block;}
+    .mobile-tabs{display:flex;}
+    .pane-human{border-right:none;}
+    .name{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="console">
+    <span class="method">GET</span>
+    <span class="url">/Bundle<span class="q" id="query-suffix"></span> <span style="opacity:0.4">HTTP/1.1</span></span>
+    <span class="status" id="status-badge">200 OK · 7 yrs, 5 roles, 4 orgs, 3 hobbies</span>
+  </div>
+  <div class="tagline">Same data. Two formats. That's kind of the whole pitch.</div>
+
+  <div class="mobile-tabs">
+    <button class="active" data-pane="human">Human-Readable</button>
+    <button data-pane="fhir">FHIR Bundle (R4)</button>
+  </div>
+
+  <div class="split">
+    <div class="pane pane-human mobile-active" id="pane-human">
+      <div class="pane-label">Rendered View</div>
+      <h1 class="name">Joshua Flam</h1>
+      <p class="role-line">Product leader — healthcare data &amp; analytics</p>
+      <div class="contact">
+        San Diego, CA · joshflam@gmail.com<br>
+        <a href="https://linkedin.com/in/joshuaflam" target="_blank" rel="noopener noreferrer">linkedin.com/in/joshuaflam</a>
+      </div>
+
+      <div class="section-nav" id="section-nav"></div>
+
+      <div class="section-title" id="section-experience">Experience</div>
+      <div id="role-cards"></div>
+
+      <div class="section-title" id="section-education">Education</div>
+      <div id="edu-list"></div>
+
+      <div class="section-title" id="section-skills">Skills</div>
+      <div id="skills-list"></div>
+
+      <div class="section-title" id="section-hobbies">Hobbies <span class="section-subtitle">(as Conditions)</span></div>
+      <div id="hobbies-list"></div>
+    </div>
+
+    <div class="pane pane-fhir" id="pane-fhir">
+      <div class="pane-label">FHIR Bundle · R4</div>
+      <div class="fhir-bundle-head" id="bundle-head"></div>
+      <div id="fhir-entries"></div>
+    </div>
+  </div>
+
+  <footer>
+    Bundle.identifier: joshuaflam.dev/fhir/resume-2026 &nbsp;·&nbsp; rendered client-side, no server, no tracking &nbsp;·&nbsp;
+    <a href="https://linkedin.com/in/joshuaflam" target="_blank" rel="noopener noreferrer">view LinkedIn profile</a>
+  </footer>
+
+<script>
+const practitioner = {
+  id: "joshua-flam",
+  name: "Joshua Flam",
+  telecom: [
+    { system: "email", value: "joshflam@gmail.com" }
+  ],
+  address: { city: "San Diego", state: "CA", country: "US" }
+};
+
+const organizations = {
+  datavant:   { id: "datavant",   name: "Datavant" },
+  apixio:     { id: "apixio",     name: "Apixio (acquired by Datavant)" },
+  interpreta: { id: "interpreta", name: "Interpreta (acquired by Centene)" },
+  nextgen:    { id: "nextgen",    name: "NextGen Healthcare / HealthFusion" }
+};
+
+const education = [
+  { deg: "M.S., Quantitative Management \u2014 Healthcare Analytics", school: "Duke University, Fuqua School of Business", start: "2018", end: "2020" },
+  { deg: "B.A., Management Information Systems", school: "University of Washington", start: "2008", end: "2012" }
+];
+
+const skillCategories = [
+  { category: "Healthcare & Interoperability", skills: ["FHIR","HL7","HIPAA","Risk Adjustment","HEDIS","Medicare Advantage","ACA","HCC","EHR"] },
+  { category: "Data", skills: ["Databricks","Snowflake","SQL","Tableau","Looker","Superset","Sigma"] },
+  { category: "Product", skills: ["Backlog Management","Agile","Figma","Salesforce","JIRA","Confluence","GitHub"] },
+  { category: "AI", skills: ["Claude","GPT","Prompt Engineering","Skill Development"] }
+];
+
+const hobbyConditions = [
+  {
+    id: "surfing",
+    hobby: "Surfer",
+    icdCode: "T63.511A",
+    icdDisplay: "Toxic effect of contact with stingray, accidental (unintentional), initial encounter",
+    note: "Occupational hazard of an otherwise very relaxing hobby.",
+    status: "resolved"
+  },
+  {
+    id: "running",
+    hobby: "Runner",
+    icdCode: "E86.0",
+    icdDisplay: "Dehydration",
+    note: "Should have brought more water on that long run.",
+    status: "resolved"
+  },
+  {
+    id: "guitar",
+    hobby: "Learning Guitar",
+    icdCode: "M79.646",
+    icdDisplay: "Pain in unspecified finger(s)",
+    note: "Chord transitions are the real enemy.",
+    status: "active"
+  }
+];
+
+const roles = [
+  {
+    id: "datavant-senior-manager",
+    org: "datavant",
+    title: "Senior Manager, Product",
+    start: "2025-03", end: null,
+    specialty: ["risk-adjustment","product-strategy","clinical-informatics"],
+    highlights: [
+      "Lead a team of product managers and product designers building client-facing risk adjustment products for health plans.",
+      "Set product strategy and prioritization across the risk adjustment portfolio.",
+      "Own the roadmap for two products: a Retrospective Risk Adjustment Suspecting and Targeting product and a Prospective Risk Adjustment solution.",
+      "Partner with clinical informatics and data science to ensure risk gap logic is precise and evidence-based.",
+      "Ensure engineering, product management, and product design are aligned and working together to build."
+    ]
+  },
+  {
+    id: "apixio-staff-pm",
+    org: "apixio",
+    title: "Staff Product Manager",
+    start: "2022-04", end: "2025-03",
+    specialty: ["fhir","risk-adjustment","clinical-data-engineering"],
+    highlights: [
+      "Built a rules-based CQL engine that parsed proprietary clinical data into FHIR and executed risk adjustment logic, improving precision 4x and nearly doubling recall.",
+      "Powered Retrospective Suspecting and Targeting, a net-new product built from zero to GA that helped close some of the company's largest deals.",
+      "Promoted to Senior Manager, Product based on product impact and cross-functional leadership.",
+      "Delivered analytics products within SOC 2- and HITRUST-certified environments, ensuring HIPAA-compliant handling of protected health information."
+    ]
+  },
+  {
+    id: "interpreta-senior-pm",
+    org: "interpreta",
+    title: "Senior Product Manager",
+    start: "2019-11", end: "2022-04",
+    specialty: ["hedis","quality-reporting","ncqa-cms"],
+    highlights: [
+      "Led retrospective HEDIS reporting and submission platform used by dozens of health plans, managing the full roadmap from discovery through delivery.",
+      "Further developed the prospective quality solution, making care gap alerts more actionable for case managers.",
+      "Developed deep expertise in HEDIS technical specifications, recognizing early how important a data standard like FHIR would become to the future of quality measurement, insight later applied to building the CQL-to-FHIR rules engine at Apixio."
+    ]
+  },
+  {
+    id: "interpreta-consultant",
+    org: "interpreta",
+    title: "Product Solutions Consultant",
+    start: "2018-10", end: "2019-11",
+    specialty: ["hedis","point-of-care"],
+    highlights: [
+      "Implemented the prospective quality solution at 30+ health plans, embedding care gap alerts into case manager and provider portals."
+    ]
+  },
+  {
+    id: "nextgen-app-specialist",
+    org: "nextgen",
+    title: "Application Specialist / Business Development",
+    start: "2012-07", end: "2018-01",
+    specialty: ["ehr","practice-management","interoperability"],
+    highlights: [
+      "Sold and implemented EHR and practice management software to hundreds of providers, developing early expertise in clinical data and software.",
+      "Learned the fundamentals of healthcare data and interoperability, including HL7 messaging for lab ordering and results and electronic prescribing (eRx).",
+      "Promoted from implementation to business development within four months; partnered with engineering to shape the MediTouch R&D roadmap."
+    ]
+  }
+];
+
+function fmtDate(d){
+  if(!d) return "Present";
+  const [y,m] = d.split("-");
+  const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[parseInt(m,10)] + " " + y;
+}
+
+function esc(str){
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// naive JSON syntax highlighter
+function highlightJSON(obj){
+  const json = JSON.stringify(obj, null, 2);
+  const escaped = esc(json);
+  return escaped.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?)/g, function(match){
+    let cls = "n";
+    if(/^"/.test(match)){
+      cls = /:$/.test(match) ? "k" : "s";
+    } else if(/true|false|null/.test(match)){
+      cls = "b";
+    }
+    return '<span class="'+cls+'">'+match+'</span>';
+  });
+}
+
+// --- Section navigation ---
+const sectionNavEl = document.getElementById("section-nav");
+const sectionLinks = [
+  { label: "Experience", human: "section-experience", fhir: "fhir-section-experience" },
+  { label: "Education", human: "section-education", fhir: "fhir-section-profile" },
+  { label: "Skills", human: "section-skills", fhir: "fhir-section-profile" },
+  { label: "Hobbies", human: "section-hobbies", fhir: "fhir-section-hobbies" }
+];
+
+sectionLinks.forEach(link => {
+  const btn = document.createElement("button");
+  btn.className = "nav-btn";
+  btn.textContent = link.label;
+  btn.dataset.human = link.human;
+  btn.addEventListener("click", () => {
+    markHumanProgrammatic();
+    document.getElementById(link.human).scrollIntoView({ behavior: "smooth", block: "start" });
+    const fhirTarget = document.getElementById(link.fhir);
+    if(fhirTarget){
+      markFhirProgrammatic();
+      fhirTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    const querySuffix = document.getElementById("query-suffix");
+    querySuffix.textContent = "#" + link.label;
+    sectionNavEl.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("current", b === btn));
+  });
+  sectionNavEl.appendChild(btn);
+});
+
+// --- Render human cards ---
+const roleCardsEl = document.getElementById("role-cards");
+const eduListEl = document.getElementById("edu-list");
+
+education.forEach(e => {
+  const div = document.createElement("div");
+  div.className = "edu-item";
+  div.innerHTML = `<div class="deg">${esc(e.deg)}</div><div class="school">${esc(e.school)} · ${e.start}–${e.end}</div>`;
+  eduListEl.appendChild(div);
+});
+
+const skillsListEl = document.getElementById("skills-list");
+skillCategories.forEach(sc => {
+  const div = document.createElement("div");
+  div.className = "skill-row";
+  div.innerHTML = `<span class="cat">${esc(sc.category)}:</span> <span class="list">${esc(sc.skills.join(", "))}</span>`;
+  skillsListEl.appendChild(div);
+});
+
+const hobbiesListEl = document.getElementById("hobbies-list");
+hobbyConditions.forEach(h => {
+  const div = document.createElement("div");
+  div.className = "condition-row";
+  div.innerHTML = `
+    <div class="condition-top">
+      <span class="condition-name">${esc(h.hobby)}</span>
+      <span class="condition-code">ICD-10-CM ${esc(h.icdCode)}</span>
+    </div>
+    <div class="condition-display">${esc(h.icdDisplay)}</div>
+    <div class="condition-note">${esc(h.note)}</div>
+    <span class="condition-status ${h.status}">${esc(h.status)}</span>
+  `;
+  hobbiesListEl.appendChild(div);
+});
+
+function buildHumanCards(){
+  roleCardsEl.innerHTML = "";
+  roles.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.link = r.id;
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-title">${esc(r.title)}</span>
+        <span class="card-dates">${fmtDate(r.start)} – ${fmtDate(r.end)}</span>
+      </div>
+      <div class="card-org">${esc(organizations[r.org].name)}</div>
+      <ul>${r.highlights.map(h => `<li>${esc(h)}</li>`).join("")}</ul>
+      <div class="card-tags">${r.specialty.map(s => `<span>${esc(s)}</span>`).join("")}</div>
+    `;
+    card.addEventListener("mouseenter", () => setLinked(r.id, true));
+    card.addEventListener("mouseleave", () => setLinked(r.id, false));
+    roleCardsEl.appendChild(card);
+  });
+}
+
+// --- Build FHIR bundle JSON + blocks ---
+const bundleHeadEl = document.getElementById("bundle-head");
+const fhirEntriesEl = document.getElementById("fhir-entries");
+
+function buildFhirEntries(){
+  fhirEntriesEl.innerHTML = "";
+
+  const totalEntries = 1 + Object.keys(organizations).length + roles.length + hobbyConditions.length;
+  bundleHeadEl.innerHTML =
+    '{<br>&nbsp;&nbsp;<span class="k">"resourceType"</span>: <span class="s">"Bundle"</span>,<br>' +
+    '&nbsp;&nbsp;<span class="k">"type"</span>: <span class="s">"collection"</span>,<br>' +
+    '&nbsp;&nbsp;<span class="k">"identifier"</span>: <span class="s">"joshuaflam.dev/fhir/resume-2026"</span>,<br>' +
+    '&nbsp;&nbsp;<span class="k">"total"</span>: <span class="n">' + totalEntries + '</span>,<br>' +
+    '&nbsp;&nbsp;<span class="k">"entry"</span>: [';
+
+  // Practitioner block (profile, education, skills all live here)
+  appendFhirDivider("fhir-section-profile", "// Practitioner — profile, qualification, skills");
+  const practitionerResource = {
+    resourceType: "Practitioner",
+    id: practitioner.id,
+    name: [{ family: "Flam", given: ["Joshua"] }],
+    telecom: practitioner.telecom,
+    address: [practitioner.address],
+    qualification: education.map(e => ({
+      code: { text: e.deg },
+      period: { start: e.start, end: e.end }
+    })),
+    extension: [
+      ...skillCategories.map(sc => ({
+        url: "https://joshuaflam.dev/fhir/StructureDefinition/skill-category",
+        extension: [
+          { url: "category", valueString: sc.category },
+          { url: "skills", valueString: sc.skills.join(", ") }
+        ]
+      }))
+    ]
+  };
+  appendFhirBlock("practitioner-joshua-flam", practitionerResource);
+
+  // Organization blocks
+  Object.values(organizations).forEach(org => {
+    appendFhirBlock("org-" + org.id, { resourceType: "Organization", id: org.id, name: org.name });
+  });
+
+  // PractitionerRole blocks
+  appendFhirDivider("fhir-section-experience", "// PractitionerRole — experience");
+  roles.forEach(r => {
+    const resource = {
+      resourceType: "PractitionerRole",
+      id: r.id,
+      practitioner: { reference: "Practitioner/" + practitioner.id },
+      organization: { reference: "Organization/" + r.org },
+      code: [{ text: r.title }],
+      period: { start: r.start, end: r.end || undefined },
+      specialty: r.specialty.map(s => ({ text: s })),
+      extension: r.highlights.map(h => ({
+        url: "https://joshuaflam.dev/fhir/StructureDefinition/highlight",
+        valueString: h
+      }))
+    };
+    appendFhirBlock(r.id, resource, r.id);
+  });
+
+  // Condition blocks (hobbies, coded for fun but with real ICD-10-CM codes)
+  appendFhirDivider("fhir-section-hobbies", "// Condition — hobbies");
+  hobbyConditions.forEach(h => {
+    const resource = {
+      resourceType: "Condition",
+      id: h.id,
+      clinicalStatus: {
+        coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: h.status }]
+      },
+      category: [{
+        coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-category", code: "problem-list-item" }]
+      }],
+      code: {
+        coding: [{ system: "http://hl7.org/fhir/sid/icd-10-cm", code: h.icdCode, display: h.icdDisplay }],
+        text: h.hobby
+      },
+      subject: { reference: "Practitioner/" + practitioner.id },
+      note: [{ text: h.note }]
+    };
+    appendFhirBlock("condition-" + h.id, resource);
+  });
+
+  appendBundleClose();
+}
+
+function appendFhirDivider(id, label){
+  const div = document.createElement("div");
+  div.className = "fhir-divider";
+  div.id = id;
+  div.textContent = label;
+  fhirEntriesEl.appendChild(div);
+}
+
+function appendFhirBlock(blockId, resource, linkId){
+  const entry = {
+    fullUrl: "https://joshuaflam.dev/fhir/" + resource.resourceType + "/" + resource.id,
+    resource: resource
+  };
+  const pre = document.createElement("pre");
+  pre.className = "fhir-block";
+  pre.id = "fhir-" + blockId;
+  if(linkId) pre.dataset.link = linkId;
+  pre.innerHTML = highlightJSON(entry);
+  fhirEntriesEl.appendChild(pre);
+}
+
+function appendBundleClose(){
+  const pre = document.createElement("pre");
+  pre.className = "fhir-block";
+  pre.style.opacity = "0.7";
+  pre.innerHTML = '&nbsp;&nbsp;]<br>}';
+  fhirEntriesEl.appendChild(pre);
+}
+
+// --- Linking + filtering ---
+function setLinked(id, on){
+  const card = document.querySelector('.card[data-link="'+id+'"]');
+  const block = document.querySelector('.fhir-block[data-link="'+id+'"]');
+  if(card) card.classList.toggle("linked", on);
+  if(block){
+    block.classList.toggle("linked", on);
+    // Scrolling content can cause the mouse to end up "hovering" a card it never
+    // actually moved onto. Only chase the hover with a scroll if we're not already
+    // mid-scroll from something else (a nav click, an active sync adjustment, etc).
+    if(on && Date.now() >= suppressSyncUntil){
+      markFhirProgrammatic();
+      block.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+}
+
+function render(){
+  buildHumanCards();
+  buildFhirEntries();
+
+  // re-attach fhir hover linking
+  document.querySelectorAll(".fhir-block[data-link]").forEach(block => {
+    block.addEventListener("mouseenter", () => setLinked(block.dataset.link, true));
+    block.addEventListener("mouseleave", () => setLinked(block.dataset.link, false));
+  });
+}
+
+render();
+
+// --- Scroll sync between panes ---
+const paneHumanEl = document.getElementById("pane-human");
+const paneFhirEl = document.getElementById("pane-fhir");
+let suppressSyncUntil = 0;
+let currentActiveId = null;
+
+// Nav clicks and hover-jumps trigger smooth-scroll animations that can take over a
+// second to settle. Rather than guess when each animation "finishes" (scrollend fires
+// unreliably when two elements animate at once), just pause sync entirely for a fixed
+// window that comfortably outlasts any of these animations.
+function suppressSync(ms){
+  suppressSyncUntil = Date.now() + ms;
+}
+function markHumanProgrammatic(){ suppressSync(1300); }
+function markFhirProgrammatic(){ suppressSync(1300); }
+
+function setActive(id){
+  if(id === currentActiveId) return;
+  if(currentActiveId){
+    const prevCard = document.querySelector('.card[data-link="'+currentActiveId+'"]');
+    const prevBlock = document.querySelector('.fhir-block[data-link="'+currentActiveId+'"]');
+    if(prevCard) prevCard.classList.remove("active");
+    if(prevBlock) prevBlock.classList.remove("active");
+  }
+  currentActiveId = id;
+  if(id){
+    const card = document.querySelector('.card[data-link="'+id+'"]');
+    const block = document.querySelector('.fhir-block[data-link="'+id+'"]');
+    if(card) card.classList.add("active");
+    if(block) block.classList.add("active");
+  }
+}
+
+// Find the item whose top is closest to a reference line near the top of the pane
+function findAnchor(paneEl, itemSelector, refOffset, maxDist){
+  const paneRect = paneEl.getBoundingClientRect();
+  const refY = paneRect.top + refOffset;
+  const items = paneEl.querySelectorAll(itemSelector);
+  let best = null, bestDist = Infinity;
+  items.forEach(item => {
+    const r = item.getBoundingClientRect();
+    const dist = Math.abs(r.top - refY);
+    if(dist < bestDist){ bestDist = dist; best = item; }
+  });
+  // If the closest card/block isn't actually near the reference line, we're most likely
+  // scrolled into a section (Education, Skills, Hobbies) that has no card of its own —
+  // don't force a sync onto some distant, unrelated experience entry.
+  if(best && maxDist != null && bestDist > maxDist) return null;
+  return best;
+}
+
+function syncFromHuman(){
+  if(Date.now() < suppressSyncUntil) return;
+  const anchor = findAnchor(paneHumanEl, ".card[data-link]", 90, 250);
+  if(!anchor) return;
+  const id = anchor.dataset.link;
+  setActive(id);
+  const target = document.getElementById("fhir-" + id);
+  if(!target) return;
+  const paneRect = paneFhirEl.getBoundingClientRect();
+  const elRect = target.getBoundingClientRect();
+  const anchorRect = anchor.getBoundingClientRect();
+  const desiredOffset = anchorRect.top - paneRect.top;
+  const delta = (elRect.top - paneRect.top) - desiredOffset;
+  if(Math.abs(delta) > 4){
+    suppressSync(300);
+    paneFhirEl.scrollTop += delta;
+  }
+}
+
+function syncFromFhir(){
+  if(Date.now() < suppressSyncUntil) return;
+  const anchor = findAnchor(paneFhirEl, ".fhir-block[data-link]", 90, 250);
+  if(!anchor) return;
+  const id = anchor.dataset.link;
+  setActive(id);
+  const target = document.querySelector('.card[data-link="'+id+'"]');
+  if(!target) return;
+  const paneRect = paneHumanEl.getBoundingClientRect();
+  const elRect = target.getBoundingClientRect();
+  const anchorRect = anchor.getBoundingClientRect();
+  const desiredOffset = anchorRect.top - paneRect.top;
+  const delta = (elRect.top - paneRect.top) - desiredOffset;
+  if(Math.abs(delta) > 4){
+    suppressSync(300);
+    paneHumanEl.scrollTop += delta;
+  }
+}
+
+let humanScrollQueued = false;
+paneHumanEl.addEventListener("scroll", () => {
+  if(humanScrollQueued) return;
+  humanScrollQueued = true;
+  requestAnimationFrame(() => { syncFromHuman(); humanScrollQueued = false; });
+});
+
+let fhirScrollQueued = false;
+paneFhirEl.addEventListener("scroll", () => {
+  if(fhirScrollQueued) return;
+  fhirScrollQueued = true;
+  requestAnimationFrame(() => { syncFromFhir(); fhirScrollQueued = false; });
+});
+
+// Both panes start at the top; sync only kicks in once the user scrolls.
+
+// mobile tabs
+document.querySelectorAll(".mobile-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mobile-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".pane").forEach(p => p.classList.remove("mobile-active"));
+    document.getElementById("pane-" + btn.dataset.pane).classList.add("mobile-active");
+  });
+});
+</script>
+</body>
+</html>
